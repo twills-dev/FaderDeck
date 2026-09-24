@@ -31,8 +31,11 @@ int lastSendTime = 0;
 
 WebSocketsClient webSocket;
 
+//websocket event handler
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
+
+        //connect & disconnect handler
         case WStype_DISCONNECTED:
             Serial.println("[WebSocket] Disconnected! Trying to reconnect...");
             break;
@@ -41,7 +44,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             Serial.println("[WebSocket] Connected to OBS server!");
             break;
             
+        //ok we actually got a response - i will need to edit this if i ever need to take input
         case WStype_TEXT: {
+
+            //no idea
             StaticJsonDocument<300> doc;
             DeserializationError error = deserializeJson(doc, payload);
             
@@ -55,16 +61,17 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             if (op == 0) {
                 Serial.println("[WebSocket] Received Hello from OBS, sending Identify...");
                 
-                StaticJsonDocument<200> identifyDoc;
-                identifyDoc["op"] = 1; // Opcode 1 = Identify
                 
-                JsonObject d = identifyDoc.createNestedObject("d");
+                StaticJsonDocument<200> identifyDoc;  //make a json doc called identifyDoc
+                identifyDoc["op"] = 1; // Opcode 1 = Identify - im assuming this adds a line with op=1 to the json doc
+                
+                JsonObject d = identifyDoc.createNestedObject("d"); //create a nested object for reasons i do not undersand
                 d["rpcVersion"] = 1; 
                 d["eventSubscriptions"] = 0; // Set to 0 since we only send data out
                 
                 String outputJson;
-                serializeJson(identifyDoc, outputJson);
-                webSocket.sendTXT(outputJson);
+                serializeJson(identifyDoc, outputJson); //formatting
+                webSocket.sendTXT(outputJson);          //send it
             }
             // Opcode 2 means OBS successfully accepted our Identify packet!
             else if (op == 2) {
